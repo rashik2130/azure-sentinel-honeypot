@@ -33,20 +33,28 @@ Most honeypot writeups stop at "here's a map of who attacked me." This project t
 - Real sign-in activity generated and confirmed in Sign-in logs
 
 ### 3. Analytics rules and incidents
-*(to be added)*
+Two scheduled analytics rules built in Sentinel:
+- **Honeypot RDP Brute Force Detection** (High severity) — queries `SecurityEvent` for `EventID == 4625`, detecting repeated failed RDP logons from a single source IP against the honeypot.
+- **Entra ID Repeated Failed Sign-In Detection** (Medium severity) — queries `SigninLogs` for `ResultType != "0"`, grouped by user, triggering at 3+ failures within a 15-minute window (15-minute schedule, 30-minute suppression).
+
+Both rules validated against real data, not just theoretical logic:
+- The honeypot rule fired against live, unsolicited internet traffic — two independent attacker IPs (originating from Indonesia and Russia) generated over 1,900 combined failed RDP logon attempts against the `administrator` account within a 24-hour window, with zero successful authentications confirmed.
+- The Entra ID rule was validated by deliberately triggering failed sign-ins (including an Entra ID Smart Lockout event) against a dedicated test account, confirming the rule correctly fires once the threshold is met.
 
 ### 4. Geo-enrichment and attack map
-*(to be added)*
+Built a Sentinel Workbook ("Honeypot Attack Map") using Log Analytics' built-in `geo_info_from_ip_address()` KQL function to resolve attacker IPs to city/country/latitude/longitude — rather than uploading and maintaining a manual GeoIP watchlist CSV. The map plots attacker IPs as markers sized by failed-attempt count; confirmed real attacker traffic originating from Indonesia, Russia, and Egypt.
 
 ### 5. Incident triage
-*(to be added — real incidents worked end-to-end with documented reasoning)*
+All incidents investigated and formally closed with documented classifications:
+- Honeypot incidents classified **True Positive – Malicious user activity**: investigated both source IPs, confirmed no successful authentication occurred despite the volume of attempts.
+- Entra ID test incident classified **Informational – Security testing**, since it was a deliberate validation of the detection rule rather than a genuine attack.
 
 ### 6. Response automation (Logic App)
-*(to be added)*
+*(to be added — next step)*
 
 ## Known limitations
 
-*(documented honestly as they come up — e.g. anything scoped out or left as a manual step, same approach as the AD/Splunk project)*
+- The Honeypot RDP Brute Force Detection rule was not configured with entity mapping (Account/IP/Host) at creation, so its earliest incidents don't show linked entities in the incident graph. Documented here rather than silently fixed, consistent with the AD/Splunk project's approach.
 
 ## Screenshots
 
