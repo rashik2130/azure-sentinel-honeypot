@@ -63,4 +63,22 @@ I also explored adding Microsoft Entra ID Identity Protection / risk-based Condi
 
 ## Screenshots
 
+**Honeypot VM deployed and running**
+![VM Overview](vm-overview.png)
+
+**MFA registration for the Entra ID test user**
+![MFA Registration](mfa-registration.png)
+
+**Entra ID Repeated Failed Sign-In Detection — validation query**
+![Entra ID Sign-In Failures](entra-signin-failures.png)
+
+**Honeypot Attack Map workbook — attacker IPs geo-resolved and plotted**
+![Attack Map](attack-map.png)
+
+**Honeypot RDP Brute Force Detection — incident view**
+![Incident Triage](incident-triage.png)
+
+**Logic App workflow — Sentinel incident trigger → Entities-Get IPs → For each → HTTP (NSG block)**
+![Logic App Workflow](logic-app-workflow.png)
+
 *(to be added)*
