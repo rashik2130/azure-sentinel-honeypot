@@ -6,13 +6,11 @@ This project is a deliberate companion to my [AD/Splunk home lab](#) — that pr
 
 ## Architecture
 
-*(diagram to be added)*
-
 - **Honeypot VM** (`corpnet-app01`, Windows 11, East US) — deliberately exposed to the public internet: NSG allows all inbound traffic, Windows Firewall disabled. Attracts real, unsolicited internet scanning and brute-force traffic.
 - **Microsoft Entra ID** — a test tenant with a dedicated test user, generating real sign-in activity including MFA registration and legacy-auth-style attempts.
 - **Log Analytics workspace** (`law-sentinel-lab`) — central log repository for both data sources.
 - **Microsoft Sentinel** — connected to the workspace, running analytics rules against both the honeypot's Windows Security Events and Entra ID sign-in logs.
-- **Azure Logic App** — automated notification playbook triggered on incident creation.
+- **Azure Logic App** — automated response playbook triggered on incident creation, resolving attacker IP entities and creating NSG block rules.
 
 ## Why two data sources
 
@@ -50,12 +48,19 @@ All incidents investigated and formally closed with documented classifications:
 - Entra ID test incident classified **Informational – Security testing**, since it was a deliberate validation of the detection rule rather than a genuine attack.
 
 ### 6. Response automation (Logic App)
-*(to be added — next step)*
+Built a Logic App (`la-honeypot-ip-block`) to automate the response to Honeypot RDP Brute Force Detection incidents:
+- A Sentinel Automation Rule triggers on new incident creation, filtered to this specific analytics rule, and runs the Logic App.
+- The workflow uses the Microsoft Sentinel connector's "Entities - Get IPs" action to resolve the incident's IP entities directly (rather than looping over all entity types and filtering manually).
+- A "For each" loop iterates over the resolved IPs, and an HTTP action authenticated via the Logic App's system-assigned managed identity calls the Azure Resource Manager REST API to create a Deny inbound security rule on `corpnet-app01-nsg` for each attacker IP — dynamically generating the rule name and a randomized priority per IP to avoid collisions.
+- The managed identity is scoped with Network Contributor access to the NSG resource specifically, not the resource group, following least-privilege.
+
+I also explored adding Microsoft Entra ID Identity Protection / risk-based Conditional Access as a second, identity-layer remediation path alongside the NSG block — documented under Known limitations below.
 
 ## Known limitations
 
 - The Honeypot RDP Brute Force Detection rule was not configured with entity mapping (Account/IP/Host) at creation, so its earliest incidents don't show linked entities in the incident graph. Documented here rather than silently fixed, consistent with the AD/Splunk project's approach.
+- Microsoft Entra ID Identity Protection and Conditional Access require P1/P2 licensing that this tenant doesn't have, confirmed directly in the Azure portal (both the legacy risk policy blade and Conditional Access itself returned licensing errors when attempting to configure risk-based policies). A second, identity-layer remediation path using these was designed but not implemented as a result — the NSG-based automated block above is the sole automated remediation in this project.
 
 ## Screenshots
 
-*(added as the project progresses)*
+*(to be added)*
