@@ -81,4 +81,3 @@ I also explored adding Microsoft Entra ID Identity Protection / risk-based Condi
 **Logic App workflow — Sentinel incident trigger → Entities-Get IPs → For each → HTTP (NSG block)**
 ![Logic App Workflow](logic-app-workflow.png)
 
-*(to be added)*
